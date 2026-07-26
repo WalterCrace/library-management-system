@@ -52,6 +52,6 @@ class Libro {
     }
 
     public function setCantidad($cantidad) {
-        $this->cantidad = $cantidad
+        $this->cantidad = $cantidad;
     }
 }
