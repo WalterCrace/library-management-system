@@ -74,20 +74,60 @@ class Biblioteca {
 
     // Gestión de Usuarios
     public function agregarUsuario(Usuario $usuario) {
-        // TODO: Insertar usuario en base de datos
+        try {
+            $query = "INSERT INTO usuarios (nombre, email, telefono) VALUES (:nombre, :email, :telefono)";
+            $stmt = $this->conn->prepare($query);
+            
+            $stmt->bindValue(':nombre', $usuario->getNombre());
+            $stmt->bindValue(':email', $usuario->getEmail());
+            $stmt->bindValue(':telefono', $usuario->getTelefono());
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            die("Error SQL al agregar usuario: " . $e->getMessage());
+        }
     }
 
     public function editarUsuario($id, $nuevosDatos) {
-        // TODO: Actualizar usuario en base de datos
+        try {
+            $query = "UPDATE usuarios SET nombre = :nombre, email = :email, telefono = :telefono WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            
+            $stmt->bindValue(':nombre', $nuevosDatos['nombre']);
+            $stmt->bindValue(':email', $nuevosDatos['email']);
+            $stmt->bindValue(':telefono', $nuevosDatos['telefono']);
+            $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            die("Error SQL al editar usuario: " . $e->getMessage());
+        }
     }
 
     public function eliminarUsuario($id) {
-        // TODO: Eliminar usuario de base de datos
+        try {
+            $query = "DELETE FROM usuarios WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            die("Error SQL al eliminar usuario: " . $e->getMessage());
+        }
+    }
+
+    public function buscarUsuario($id) {
+        $query = "SELECT * FROM usuarios WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function obtenerUsuarios() {
-        // TODO: Retornar lista de usuarios
-        return [];
+        $query = "SELECT * FROM usuarios";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     // Gestión de Préstamos
