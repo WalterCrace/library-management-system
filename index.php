@@ -22,7 +22,7 @@ if ($action === 'eliminar_libro' && isset($_GET['id'])) {
     header("Location: index.php?action=libros");
     exit();
 }
-
+// Precesar editar libro
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actualizar_libro'])) {
     $id = $_POST['id'];
     
@@ -33,17 +33,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actualizar_libro'])) 
         'cantidad' => $_POST['cantidad']
     ];
     
-    // Guardamos el resultado en una variable
     $resultado = $biblioteca->editarLibro($id, $nuevosDatos);
     
     if ($resultado) {
-        // Si funcionó, redirige
         header("Location: index.php?action=libros");
         exit();
     } else {
-        // Si no funcionó, muestra este mensaje
         die("Ocurrió un error desconocido al intentar actualizar el libro.");
     }
+}
+
+// Procesar crear usuario
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['crear_usuario'])) {
+    $nuevoUsuario = new Usuario($_POST['nombre'], $_POST['email'], $_POST['telefono']);
+    $biblioteca->agregarUsuario($nuevoUsuario);
+    
+    header("Location: index.php?action=usuarios");
+    exit();
+}
+
+// Procesar editar usuario
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actualizar_usuario'])) {
+    $id = $_POST['id'];
+    
+    $nuevosDatos = [
+        'nombre' => $_POST['nombre'],
+        'email' => $_POST['email'],
+        'telefono' => $_POST['telefono']
+    ];
+    
+    $resultado = $biblioteca->editarUsuario($id, $nuevosDatos);
+    
+    if ($resultado) {
+        header("Location: index.php?action=usuarios");
+        exit();
+    } else {
+        die("Error desconocido al intentar actualizar el usuario. Verifica que el correo no esté duplicado.");
+    }
+}
+
+//Procesar eliminar usuario
+if ($action === 'eliminar_usuario' && isset($_GET['id'])) {
+    $biblioteca->eliminarUsuario($_GET['id']);
+    header("Location: index.php?action=usuarios");
+    exit();
 }
 ?>
 
@@ -116,10 +149,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actualizar_libro'])) 
                                 <a href="index.php?action=eliminar_libro&id=<?= $libro['id'] ?>" style="color: red;" onclick="return confirm('¿Estás seguro de que deseas eliminar este libro?');">Eliminar</a>
                             </td>
                         </tr>
-                        <?php endforeach; ?>
+                        <?php endforeach; 
+                            ?>
                     </tbody>
                 </table>
-            <?php endif; ?>
+            <?php endif; 
+                ?>
                
             <?php if ($action === 'editar_libro' && isset($_GET['id'])): 
                 // Buscamos el libro actual
@@ -157,6 +192,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actualizar_libro'])) 
             <?php 
                 endif; 
             endif;
+            ?>
+            <!-- Vista de usuario -->
+            <?php if ($action === 'usuarios'): ?>
+                <h2>Gestión de Usuarios</h2>
+                
+                <!-- Formulario Agregar Usuario -->
+                <form method="POST" action="index.php" style="background: #f9f9f9; padding: 15px; border: 1px solid #ddd;">
+                    <h3>Agregar Nuevo Usuario</h3>
+                    <div class="form-group"><input type="text" name="nombre" placeholder="Nombre completo" required></div>
+                    <div class="form-group"><input type="email" name="email" placeholder="Correo electrónico" required></div>
+                    <div class="form-group"><input type="text" name="telefono" placeholder="Teléfono" required></div>
+                    <button type="submit" name="crear_usuario">Guardar Usuario</button>
+                </form>
+
+                <!-- Listado de Usuarios -->
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        $usuarios = $biblioteca->obtenerUsuarios();
+                        foreach($usuarios as $usuario): 
+                        ?>
+                        <tr>
+                            <td><?= $usuario['id'] ?></td>
+                            <td><?= $usuario['nombre'] ?></td>
+                            <td><?= $usuario['email'] ?></td>
+                            <td><?= $usuario['telefono'] ?></td>
+                            <td>
+                                <a href="index.php?action=editar_usuario&id=<?= $usuario['id'] ?>" style="color: blue;">Editar</a> | 
+                                <a href="index.php?action=eliminar_usuario&id=<?= $usuario['id'] ?>" style="color: red;" onclick="return confirm('¿Estás seguro de eliminar este usuario?');">Eliminar</a>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+
+
+            <?php if ($action === 'editar_usuario' && isset($_GET['id'])): 
+                $usuarioActual = $biblioteca->buscarUsuario($_GET['id']);
+                
+                if (!$usuarioActual): 
+                    echo "<p>Error: El usuario no existe.</p>";
+                else:
+            ?>
+                <h2>Editar Usuario</h2>
+                <form method="POST" action="index.php" style="background: #e9ecef; padding: 15px; border: 1px solid #ddd;">
+                    
+                    <input type="hidden" name="id" value="<?= $usuarioActual['id'] ?>">
+                    
+                    <div class="form-group">
+                        <label>Nombre:</label><br>
+                        <input type="text" name="nombre" value="<?= $usuarioActual['nombre'] ?>" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email:</label><br>
+                        <input type="email" name="email" value="<?= $usuarioActual['email'] ?>" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono:</label><br>
+                        <input type="text" name="telefono" value="<?= $usuarioActual['telefono'] ?>" required>
+                    </div>
+                    
+                    <button type="submit" name="actualizar_usuario">Guardar Cambios</button>
+                    <a href="index.php?action=usuarios" style="margin-left: 15px; text-decoration: none; color: red;">Cancelar</a>
+                </form>
+            <?php 
+                endif; 
+            endif; 
             ?>
         </div>
     </div>
