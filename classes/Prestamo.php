@@ -28,7 +28,7 @@ class Prestamo {
         return $this->libro_id;
     }
 
-    public function setLibroId(libro_id) {
+    public function setLibroId($libro_id) {
         $this->libro_id = $libro_id;
     }
 
@@ -36,7 +36,7 @@ class Prestamo {
         return $this->usuario_id;
     }
 
-    public function setUsuarioId(usuario_id){
+    public function setUsuarioId($usuario_id){
         $this->usuario_id = $usuario_id;
     }
 
@@ -44,7 +44,7 @@ class Prestamo {
         return $this->fecha_prestamo;
     }
 
-    public function setFechaPrestamo(fecha_prestamo){
+    public function setFechaPrestamo($fecha_prestamo){
         $this->fecha_prestamo = $fecha_prestamo;
     }
 
