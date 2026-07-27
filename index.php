@@ -72,10 +72,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actualizar_usuario'])
     }
 }
 
-//Procesar eliminar usuario
+// Procesar eliminar usuario
 if ($action === 'eliminar_usuario' && isset($_GET['id'])) {
     $biblioteca->eliminarUsuario($_GET['id']);
     header("Location: index.php?action=usuarios");
+    exit();
+}
+
+// Precesar prestar libro
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prestar_libro'])) {
+    $libro_id = $_POST['libro_id'];
+    $usuario_id = $_POST['usuario_id'];
+    
+    $resultado = $biblioteca->prestarLibro($libro_id, $usuario_id);
+    
+    if (!$resultado) {
+        die("Error: No se pudo realizar el préstamo. Verifica que haya stock disponible.");
+    }
+    
+    header("Location: index.php?action=prestamos");
+    exit();
+}
+
+//Procesar devolver libro
+if ($action === 'devolver_libro' && isset($_GET['id'])) {
+    $biblioteca->devolverLibro($_GET['id']);
+    header("Location: index.php?action=prestamos");
     exit();
 }
 ?>
@@ -270,6 +292,87 @@ if ($action === 'eliminar_usuario' && isset($_GET['id'])) {
                 endif; 
             endif; 
             ?>
+
+        <!-- Vista de prestamo -->
+         <?php if ($action === 'prestamos'): ?>
+                <h2>Gestión de Préstamos</h2>
+                
+                <!-- Formulario Prestar Libro -->
+                <form method="POST" action="index.php" style="background: #f9f9f9; padding: 15px; border: 1px solid #ddd;">
+                    <h3>Registrar Nuevo Préstamo</h3>
+                    
+                    <div class="form-group">
+                        <label>Seleccionar Usuario:</label><br>
+                        <select name="usuario_id" required style="width: 100%; padding: 5px;">
+                            <option value="">-- Selecciona un usuario --</option>
+                            <?php 
+                            $usuarios = $biblioteca->obtenerUsuarios();
+                            foreach($usuarios as $user): 
+                            ?>
+                                <option value="<?= $user['id'] ?>"><?= $user['nombre'] ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Seleccionar Libro:</label><br>
+                        <select name="libro_id" required style="width: 100%; padding: 5px;">
+                            <option value="">-- Selecciona un libro --</option>
+                            <?php 
+                            $libros = $biblioteca->obtenerLibros();
+                            foreach($libros as $book): 
+                                // Solo mostrar libros que tengan stock disponible
+                                if($book['cantidad'] > 0):
+                            ?>
+                                <option value="<?= $book['id'] ?>"><?= $book['titulo'] ?> (Stock: <?= $book['cantidad'] ?>)</option>
+                            <?php 
+                                endif;
+                            endforeach; 
+                            ?>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" name="prestar_libro">Registrar Préstamo</button>
+                </form>
+
+                <!-- Listado de Préstamos Activos -->
+                <h3 style="margin-top: 30px;">Préstamos Activos</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID Préstamo</th>
+                            <th>Libro</th>
+                            <th>Usuario</th>
+                            <th>Fecha Préstamo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        $prestamos = $biblioteca->obtenerPrestamosActivos();
+                        if (count($prestamos) > 0):
+                            foreach($prestamos as $prestamo): 
+                        ?>
+                        <tr>
+                            <td><?= $prestamo['id'] ?></td>
+                            <td><?= $prestamo['libro'] ?></td>
+                            <td><?= $prestamo['usuario'] ?></td>
+                            <td><?= $prestamo['fecha_prestamo'] ?></td>
+                            <td>
+                                <a href="index.php?action=devolver_libro&id=<?= $prestamo['id'] ?>" style="color: green; font-weight: bold;" onclick="return confirm('¿Confirmar la devolución de este libro?');">Devolver Libro</a>
+                            </td>
+                        </tr>
+                        <?php 
+                            endforeach; 
+                        else:
+                        ?>
+                        <tr>
+                            <td colspan="5" style="text-align: center;">No hay préstamos activos en este momento.</td>
+                        </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
         </div>
     </div>
 </body>
