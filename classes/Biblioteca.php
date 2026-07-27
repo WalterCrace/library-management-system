@@ -39,7 +39,7 @@ class Biblioteca {
             
             return $stmt->execute();
         } catch (PDOException $e) {
-            // AQUÍ ESTÁ EL CAMBIO: Hacemos que detenga todo y nos muestre el error de SQL
+
             die("Error SQL al editar: " . $e->getMessage()); 
         }
     }
@@ -51,7 +51,6 @@ class Biblioteca {
             $stmt->bindValue(':id', $id, PDO::PARAM_INT);
             return $stmt->execute();
         } catch (PDOException $e) {
-            // Manejar error (por ejemplo, si el libro está asociado a un préstamo activo)
             return false;
         }
     }
@@ -187,7 +186,14 @@ class Biblioteca {
     }
 
     public function obtenerPrestamosActivos() {
-        // TODO: Retornar lista de préstamos activos
-        return [];
+        $query = "SELECT p.id, l.titulo AS libro, u.nombre AS usuario, p.fecha_prestamo 
+                  FROM prestamos p 
+                  INNER JOIN libros l ON p.libro_id = l.id 
+                  INNER JOIN usuarios u ON p.usuario_id = u.id 
+                  WHERE p.estado = 'activo'";
+                  
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
